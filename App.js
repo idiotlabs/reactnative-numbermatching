@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import {
   AppRegistry,
+  Alert,
   StyleSheet,
   Dimensions,
   View,
@@ -8,6 +9,7 @@ import {
 } from 'react-native';
 
 import { SketchCanvas } from '@terrylinla/react-native-sketch-canvas';
+import RNShake from 'react-native-shake';
 
 export default class example extends Component {
   constructor(props) {
@@ -29,6 +31,26 @@ export default class example extends Component {
       firstFlag: true,
       timeoutFlag: true,
     };
+  }
+
+  componentWillMount() {
+    RNShake.addEventListener('ShakeEvent', () => {
+      // this.InitAll();
+
+      Alert.alert(
+        '다시 시작',
+        '다시 시작하시겠습니까?',
+        [
+          {text: 'Cancel', style: 'cancel'},
+          {text: 'OK', onPress: () => this.InitAll()},
+        ],
+        { cancelable: false }
+      )
+    });
+  }
+
+  componentWillUnmount() {
+    RNShake.removeEventListener('ShakeEvent');
   }
 
   _onStrokeStart = (x, y) => {
@@ -97,20 +119,12 @@ export default class example extends Component {
   }
 
   _onStrokeChanged = (x, y) => {
-    console.log('_onStrokeChanged');
-
     this.setState({ laterX: x })
     this.setState({ laterY: y })
 
     if (this.state.timeoutFlag) {
       this.setState({timeoutFlag: false})
       setTimeout( () => {
-        console.log('setTimeout');
-
-        console.log(this.state.areaX);
-        console.log(this.state.firstX);
-        console.log(this.state.laterX);
-
         if (this.state.areaX == 0) {
           if (this.state.firstX <= this.state.laterX) {
             this.GenerateNumber();
@@ -133,12 +147,21 @@ export default class example extends Component {
   }
 
   GenerateNumber = () => {
-    console.log('GenerateNumber');
     const min = 1;
     const max = 8;
     const rand = Math.floor(min + Math.random() * (max - min));
 
     this.setState({ findNumber: rand });
+  }
+
+  InitAll = () => {
+    this.canvas.clear()
+
+    this.setState({
+      findNumber: '',
+      firstFlag: true,
+      timeoutFlag: true,
+    });
   }
 
   render() {
@@ -150,7 +173,7 @@ export default class example extends Component {
       position: 'absolute',
       left: numberX,
       top: numberY,
-      color: '#111',
+      color: '#333',
       fontSize: 50,
       fontWeight: 'bold',
       transform: [{ rotate: numberRotate + 'deg'}]
@@ -160,6 +183,7 @@ export default class example extends Component {
       <View style={styles.container}>
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <SketchCanvas
+            ref={ref => this.canvas = ref}
             style={{ flex: 1 }}
             strokeColor={'white'}
             strokeWidth={30}
