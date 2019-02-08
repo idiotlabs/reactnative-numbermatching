@@ -1,20 +1,25 @@
 import React, { Component } from 'react';
 import {
   AppRegistry,
+  AsyncStorage,
   Alert,
   StyleSheet,
   Dimensions,
+  Modal,
   View,
   Text,
 } from 'react-native';
 
 import { SketchCanvas } from '@terrylinla/react-native-sketch-canvas';
 import RNShake from 'react-native-shake';
+import { AdMobBanner } from 'react-native-admob';
+import ManualModal from './components/ManualModal';
 
 export default class example extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      firstModal: false,
       findNumber: '',
       areaNumber: '',
       numberX: 0,
@@ -33,10 +38,33 @@ export default class example extends Component {
     };
   }
 
-  componentWillMount() {
-    RNShake.addEventListener('ShakeEvent', () => {
-      // this.InitAll();
+  componentDidMount() {
 
+    AsyncStorage.getItem('firstLaunched', (err, result) => {
+      console.log("error", err, "result", result);
+
+      if (err) {
+      }
+      else {
+        if (result == null) {
+          console.log("null value recieved", result);
+
+          this.setState({ firstModal: true });
+        }
+        else {
+          console.log("result", result);
+        }
+      }
+    });
+
+    AsyncStorage.setItem('firstLaunched', JSON.stringify({"value":"false"}), (err,result) => {
+      console.log("error", err, "result", result);
+    });
+  }
+
+  componentWillMount() {
+
+    RNShake.addEventListener('ShakeEvent', () => {
       Alert.alert(
         '다시 시작',
         '다시 시작하시겠습니까?',
@@ -146,6 +174,14 @@ export default class example extends Component {
     }
   }
 
+  setModalVisible(visible) {
+    this.setState({ firstModal: visible });
+  }
+
+  setModalVisibleClose() {
+    this.setState({ firstModal: false });
+  }
+
   GenerateNumber = () => {
     const min = 1;
     const max = 8;
@@ -180,7 +216,13 @@ export default class example extends Component {
     }
 
     return (
+
       <View style={styles.container}>
+        <ManualModal
+          firstModal={this.state.firstModal}
+          action={this.setModalVisibleClose.bind(this)}
+          >
+        </ManualModal>
         <View style={{ flex: 1, flexDirection: 'row' }}>
           <SketchCanvas
             ref={ref => this.canvas = ref}
@@ -202,6 +244,17 @@ export default class example extends Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#333',
+  },
+  modalContainer: {
+    backgroundColor:'black',
+		flex:1,
+		marginTop:70,
+		marginBottom:40,
+		marginLeft:20,
+		marginRight:20,
+		borderRadius:20,
+		borderWidth:4,
+		borderColor:'red'
   }
 });
 
